@@ -76,12 +76,13 @@ def webdatetime(txt):
 
 
 def cached_url_filename(url):
-    fs_converted_url = re.sub('[/:@]+', '_', url)
+    fs_converted_url = re.sub('[/:@\.]+', '_', url)
 
     if os.getenv("SMA_CACHE_LOCATION"):
         path_to_fs = os.getenv("SMA_CACHE_LOCATION")
     else:
-        path_to_fs = os.path.expanduser('~') + '/.sma_cache'
+        # path_to_fs = os.path.expanduser('~') + '/.sma_cache'
+        path_to_fs = 'cache'
 
     if not os.path.exists(path_to_fs):
         os.makedirs(path_to_fs)
@@ -89,6 +90,7 @@ def cached_url_filename(url):
 
 
 def url_open_resp(url):
+    print 'Opening URL: ', url
     global opener, login_user, login_pass
     if not opener and login_user:
         if login_user:
@@ -132,8 +134,9 @@ def cached_url_open(url, is_zipped=False):
         filedate = datetime.datetime.fromtimestamp(
                                     os.path.getmtime(fs_converted_url))
         if filedate >= webdate:
-            fileop = open(fs_converted_url, 'r')
-            return fileop.read()
+            with open(fs_converted_url, 'r') as fileop:
+                result = fileop.read()
+            return result
 
     result = url_open(url)
 
@@ -141,8 +144,8 @@ def cached_url_open(url, is_zipped=False):
         zipdata = gzip.GzipFile(fileobj=StringIO.StringIO(result))
         result = zipdata.read()
 
-    fileop = open(fs_converted_url, 'w')
-    fileop.write(result)
+    with open(fs_converted_url, 'w') as fileop:
+        fileop.write(result)
 
     return result
 
@@ -161,7 +164,8 @@ def mailman_archives(MailmanUrl):
     for archive in grp:
         archive1 = re.sub(r'href=', '', archive)
         app = re.sub(r'"', '', archive1)
-        archives.append(app)
+        if app[:4] in ['2020', '2021', '2022']:
+            archives.append(app)
 
     return archives
 
@@ -169,7 +173,7 @@ def mailman_archives(MailmanUrl):
 def get_mailman_mailbox_from_archive(ArchiveUrl):
     # print "Scanning %s" % ArchiveUrl
     try:
-        unzipped = cached_url_open(ArchiveUrl, True)
+        unzipped = cached_url_open(ArchiveUrl, False)
     except:
         print "Unable to open mailbox [%s]" % ArchiveUrl
         return None
@@ -551,7 +555,7 @@ def run_main():
 
     if os.getenv('SMA_LOGIN_USER'):
         login_user = os.getenv('SMA_LOGIN_USER')
-    if os.getenv('SMA_LOGIN_PASSWORD'):
+    if os.getenv('SMA_LOGIN_PASS'):
         login_pass = os.getenv('SMA_LOGIN_PASS')
 
     found_message = False
