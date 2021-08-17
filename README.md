@@ -51,6 +51,15 @@ not exist, it will be created
 Reconstruct possible matching URLs. This option requires internet access to
 be successful.
 
+Practical Usage
+===============
+First, download mailman archives. The archives will be downloaded to a folder called cache.
+
+python search.py -l email:password https://someurl.com/mailman/private/listname/ body contains searchterm
+
+Next, use grep to search the downloaded archives
+
+grep -n -C 20 -i 'searchterm' \*year-month\*
 
 Filters
 =======
